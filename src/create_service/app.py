@@ -3,10 +3,10 @@ import os
 import json
 import uuid
 from datetime import datetime
+from pprint import pprint
 
 
 def lambda_handler(message, context):
-
     if ('body' not in message or
             message['httpMethod'] != 'POST'):
         return {
@@ -31,23 +31,21 @@ def lambda_handler(message, context):
         )
 
     table = Services_table.Table(table_name)
-    activity = json.loads(message['body'])
+    website = json.loads(message['body'])
 
     params = {
         'id': str(uuid.uuid4()),
-        'date': str(datetime.timestamp(datetime.now())),
-        'stage': activity['stage'],
-        'description': activity['description']
+        'url': website['url'],
+        'previous_response': website['previous_response']
     }
 
     response = table.put_item(
         TableName=table_name,
         Item=params
     )
-    print(response)
 
     return {
-        'statusCode': 201,
-        'headers': {},
-        'body': json.dumps({'msg': 'Activity created', 'id': id})
+        "statusCode": 201,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({"id": params['id']})
     }

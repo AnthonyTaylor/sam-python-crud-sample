@@ -30,11 +30,10 @@ def lambda_handler(message, context):
 
     table = Services_table.Table(table_name)
     activity_id = message['pathParameters']['id']
-    activity_date = message['pathParameters']['date']
+
 
     params = {
         'id': activity_id,
-        'date': activity_date
     }
 
     response = table.delete_item(
@@ -45,5 +44,5 @@ def lambda_handler(message, context):
     return {
         'statusCode': 200,
         'headers': {},
-        'body': json.dumps({'msg': 'Activity deleted'})
+        'body': json.dumps({'msg': 'Service deleted'})
     }

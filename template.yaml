@@ -6,24 +6,23 @@ Description: >
   SAM Template for sam-python-service-availability
 
 Parameters:
-  Table:
-    Type: String
-    Default: Services
   Region:
     Type: String
     Default: eu-west-2
   AWSEnv:
     Type: String
     Default: AWS
-  Stage:
+  HookUrl:
     Type: String
-    Default: dev
+    NoEcho: True
 
 Globals:
   Function:
     Timeout: 60
 
 Resources:
+
+  #CRUD actions
   CreateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -32,7 +31,8 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
-          TABLE: !Ref Table
+          # TABLE: !Ref Table
+          TABLE: !Ref ServicesTable
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
       Events:
@@ -52,7 +52,7 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
-          TABLE: !Ref Table
+          TABLE: !Ref ServicesTable
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
       Events:
@@ -72,7 +72,7 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
-          TABLE: !Ref Table
+          TABLE: !Ref ServicesTable
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
       Events:
@@ -92,14 +92,14 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
-          TABLE: !Ref Table
+          TABLE: !Ref ServicesTable
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
       Events:
         CreateServices:
           Type: Api
           Properties:
-            Path: /Services/{id}
+            Path: /Services/
             Method: put
       Policies:
         - DynamoDBCrudPolicy:
@@ -112,14 +112,14 @@ Resources:
       Runtime: python3.8
       Environment:
         Variables:
-          TABLE: !Ref Table
+          TABLE: !Ref ServicesTable
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
       Events:
         CreateServices:
           Type: Api
           Properties:
-            Path: /Services/{id}/{date}
+            Path: /Services/{id}/
             Method: delete
       Policies:
         - DynamoDBCrudPolicy:
@@ -131,21 +131,36 @@ Resources:
         -
           AttributeName: "id"
           AttributeType: "S"
-        -
-          AttributeName: "date"
-          AttributeType: "S"
       KeySchema:
         -
           AttributeName: "id"
           KeyType: "HASH"
-        -
-          AttributeName: "date"
-          KeyType: "RANGE"
       ProvisionedThroughput:
         ReadCapacityUnits: "1"
         WriteCapacityUnits: "1"
-      TableName: "Services"
 
+
+  StatusCodesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/status_Codes/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          TABLE: !Ref ServicesTable
+          REGION: !Ref Region
+          AWSENV: !Ref AWSEnv
+          HookUrl: !Ref HookUrl
+          ApiUrl: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/Services/"
+      # Events:
+      #   CheckWebsiteScheduledEvent:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: rate(1 minute)
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable 
 Outputs:
   ServicesApi:
     Description: "API Gateway endpoint URL for Prod stage for Create Service Function"

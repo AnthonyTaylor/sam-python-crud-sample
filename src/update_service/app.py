@@ -29,26 +29,25 @@ def lambda_handler(message, context):
         )
 
     table = Services_table.Table(table_name)
-    activity = json.loads(message['body'])
+    service = json.loads(message['body'])
 
     params = {
-        'id': activity['id'],
-        'date': activity['date']
+        'id': service['id']
     }
 
     response = table.update_item(
         Key=params,
-        UpdateExpression="set stage = :s, description = :d",
+        UpdateExpression="set url = :u, previous_response = :p",
         ExpressionAttributeValues={
-            ':s': activity['stage'],
-            ':d': activity['description']
+            ':u': service['url'],
+            ':p': service['previous_response']
         },
         ReturnValues="UPDATED_NEW"
     )
-    print(response)
+    # print(response)
 
     return {
         'statusCode': 200,
         'headers': {},
-        'body': json.dumps({'msg': 'Activity updated'})
+        'body': json.dumps({'msg': 'service updated'})
     }

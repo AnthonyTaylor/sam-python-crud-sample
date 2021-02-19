@@ -16,9 +16,8 @@ def lambda_handler(message, context):
     table_name = os.environ.get('TABLE', 'Services')
     region = os.environ.get('REGION', 'eu-west-2')
     aws_environment = os.environ.get('AWSENV', 'AWS_SAM_LOCAL')
-    # stage = os.environ.get('STAGE', ' dev)
-    # if aws_environment == 'AWS_SAM_LOCAL':
-    if True:
+
+    if aws_environment == 'AWS_SAM_LOCAL':
         Services_table = boto3.resource(
             'dynamodb',
             endpoint_url='http://dynamodb:8000'
@@ -30,12 +29,20 @@ def lambda_handler(message, context):
         )
 
     table = Services_table.Table(table_name)
-
     response = table.scan()
-    print(response)
+
+    websites = []
+    for val in response['Items']:
+        website = {}
+        website['id'] = val['id']
+        website['url'] = val['url']
+        website['previous_response'] = int(val['previous_response'])
+        websites.append(website)
 
     return {
         'statusCode': 200,
         'headers': {},
-        'body': json.dumps(response['Items'])
+        'body': json.dumps(websites)
     }
+
+# [ERROR] TypeError: Object of type Decimal is not JSON serializable
